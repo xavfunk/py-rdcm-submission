@@ -510,12 +510,15 @@ class DCM:
         Nc = self.U.X0.shape[1] # second element of shape of X0 gives number of confounds
         
         for nc in range(Nc):
-            self.b = np.append(self.b, self.b[:,:,0]).reshape(self.b.shape[0],self.b.shape[2]+1, self.b.shape[1])
+            self.b = np.dstack((self.b, self.b[:,:,0]))
             self.c = np.hstack((self.c, np.ones((self.c.shape[0], 1))))
+        
+        # reshape b
+        self.b = np.swapaxes(self.b, 1, 2)
         
         # get number of regions and inputs
         nr, nu = self.c.shape
-      
+              
         # no baseline regressor for simulations
         if (self.options.type == 's'):
             self.c[:,-1] = 0
@@ -536,7 +539,7 @@ class DCM:
         yd_pred_rdcm_fft[:] = np.NaN
               
         # array to store free energies
-        logF = np.zeros(50, dtype = complex)
+        logF = np.zeros(nr, dtype = complex)
         
         # array to store free energy trajectories
         F_trajectory = [[] for i in range(nr)]
@@ -925,7 +928,12 @@ class U:
         self.u = u
         self.dt = dt # Y.dt/16 # fix this later
         self.X0 = X0
-        
+        if X0 is not None:
+            if len(X0.shape) == 1:
+            	self.X0 = X0.reshape(len(X0), 1)
+        else:
+            self.X0 = X0
+            
         if names:
             self.names = names
         else:
